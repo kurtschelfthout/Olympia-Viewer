@@ -1,0 +1,171 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:PresentationOptions="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options" 
+                     xmlns:wpfoly="clr-namespace:WpfOly">
+    <wpfoly:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    <wpfoly:KeyToStaticResourceConverter x:Key="KeyToStaticResourceConverter"/>
+    <wpfoly:ProvinceTypeToBrushConverter x:Key="ProvinceTypeToBrushConverter"/>
+    <wpfoly:SmallerThanConverter x:Key="SmallerThanConverter"/>
+    <SolidColorBrush x:Key="forest" Color="ForestGreen" PresentationOptions:Freeze="True" />
+    <SolidColorBrush x:Key="ocean" Color="SkyBlue" PresentationOptions:Freeze="True" />
+    <SolidColorBrush x:Key="desert" Color="SandyBrown" PresentationOptions:Freeze="True" />
+    <SolidColorBrush x:Key="plain" Color="Yellow" PresentationOptions:Freeze="True" />
+    <SolidColorBrush x:Key="mountain" Color="Crimson" PresentationOptions:Freeze="True" />
+    <SolidColorBrush x:Key="swamp" Color="DimGray" PresentationOptions:Freeze="True" />
+    <SolidColorBrush x:Key="tunnel" Color="DarkKhaki" PresentationOptions:Freeze="True" />
+    <SolidColorBrush x:Key="chamber" Color="DarkKhaki" PresentationOptions:Freeze="True" />
+    <SolidColorBrush x:Key="fill" Color="Khaki" PresentationOptions:Freeze="True" />
+    <SolidColorBrush x:Key="hades" Color="Goldenrod" PresentationOptions:Freeze="True" />
+    <SolidColorBrush x:Key="cloud" Color="AntiqueWhite" PresentationOptions:Freeze="True" />
+    <SolidColorBrush x:Key="underground" Color="Goldenrod" PresentationOptions:Freeze="True" />
+
+    <DrawingBrush x:Key="forest_visited" Stretch="Fill">
+        <DrawingBrush.Drawing>
+            <GeometryDrawing Brush="{StaticResource forest}">
+                <GeometryDrawing.Geometry>
+                    <RectangleGeometry Rect="0,0,100,100"/>
+                </GeometryDrawing.Geometry>
+                <GeometryDrawing.Pen>
+                    <Pen Brush="Black" Thickness="2"/>
+                </GeometryDrawing.Pen>
+            </GeometryDrawing>
+        </DrawingBrush.Drawing>  
+    </DrawingBrush>
+    <DrawingBrush x:Key="ocean_visited" Stretch="Fill">
+        <DrawingBrush.Drawing>
+            <GeometryDrawing Brush="{StaticResource ocean}">
+                <GeometryDrawing.Geometry>
+                    <RectangleGeometry Rect="0,0,100,100"/>
+                </GeometryDrawing.Geometry>
+                <GeometryDrawing.Pen>
+                    <Pen Brush="Black" Thickness="2"  />
+                </GeometryDrawing.Pen>
+            </GeometryDrawing>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    <DrawingBrush x:Key="desert_visited" Stretch="Fill">
+        <DrawingBrush.Drawing>
+            <GeometryDrawing Brush="{StaticResource desert}">
+                <GeometryDrawing.Geometry>
+                    <RectangleGeometry Rect="0,0,100,100"/>
+                </GeometryDrawing.Geometry>
+                <GeometryDrawing.Pen>
+                    <Pen Brush="Black" Thickness="2"  />
+                </GeometryDrawing.Pen>
+            </GeometryDrawing>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    <DrawingBrush x:Key="plain_visited" Stretch="Fill">
+        <DrawingBrush.Drawing>
+            <GeometryDrawing Brush="{StaticResource plain}">
+                <GeometryDrawing.Geometry>
+                    <RectangleGeometry Rect="0,0,100,100"/>
+                </GeometryDrawing.Geometry>
+                <GeometryDrawing.Pen>
+                    <Pen Brush="Black" Thickness="2"  />
+                </GeometryDrawing.Pen>
+            </GeometryDrawing>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    <DrawingBrush x:Key="mountain_visited" Stretch="Fill">
+        <DrawingBrush.Drawing>
+            <GeometryDrawing Brush="{StaticResource mountain}">
+                <GeometryDrawing.Geometry>
+                    <RectangleGeometry Rect="0,0,100,100"/>
+                </GeometryDrawing.Geometry>
+                <GeometryDrawing.Pen>
+                    <Pen Brush="Black" Thickness="2"  />
+                </GeometryDrawing.Pen>
+            </GeometryDrawing>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    <DrawingBrush x:Key="swamp_visited" Stretch="Fill">
+        <DrawingBrush.Drawing>
+            <GeometryDrawing Brush="{StaticResource swamp}">
+                <GeometryDrawing.Geometry>
+                    <RectangleGeometry Rect="0,0,100,100"/>
+                </GeometryDrawing.Geometry>
+                <GeometryDrawing.Pen>
+                    <Pen Brush="Black" Thickness="2"  />
+                </GeometryDrawing.Pen>
+            </GeometryDrawing>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    <DrawingBrush x:Key="tunnel_visited" Stretch="Fill">
+        <DrawingBrush.Drawing>
+            <GeometryDrawing Brush="{StaticResource tunnel}">
+                <GeometryDrawing.Geometry>
+                    <RectangleGeometry Rect="0,0,100,100"/>
+                </GeometryDrawing.Geometry>
+                <GeometryDrawing.Pen>
+                    <Pen Brush="Black" Thickness="2"  />
+                </GeometryDrawing.Pen>
+            </GeometryDrawing>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    <DrawingBrush x:Key="chamber_visited" Stretch="Fill">
+        <DrawingBrush.Drawing>
+            <GeometryDrawing Brush="{StaticResource tunnel}">
+                <GeometryDrawing.Geometry>
+                    <RectangleGeometry Rect="0,0,100,100"/>
+                </GeometryDrawing.Geometry>
+                <GeometryDrawing.Pen>
+                    <Pen Brush="Black" Thickness="2"  />
+                </GeometryDrawing.Pen>
+            </GeometryDrawing>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    <DrawingBrush x:Key="cloud_visited" Stretch="Fill">
+        <DrawingBrush.Drawing>
+            <GeometryDrawing Brush="{StaticResource cloud}">
+                <GeometryDrawing.Geometry>
+                    <RectangleGeometry Rect="0,0,100,100"/>
+                </GeometryDrawing.Geometry>
+                <GeometryDrawing.Pen>
+                    <Pen Brush="Black" Thickness="2"  />
+                </GeometryDrawing.Pen>
+            </GeometryDrawing>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    <DrawingBrush x:Key="underground_visited" Stretch="Fill">
+        <DrawingBrush.Drawing>
+            <GeometryDrawing Brush="{StaticResource underground}">
+                <GeometryDrawing.Geometry>
+                    <RectangleGeometry Rect="0,0,100,100"/>
+                </GeometryDrawing.Geometry>
+                <GeometryDrawing.Pen>
+                    <Pen Brush="Black" Thickness="2"  />
+                </GeometryDrawing.Pen>
+            </GeometryDrawing>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    
+
+    <!--<Style TargetType="TreeViewItem">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TreeViewItem">
+                    <Grid Margin="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        
+                        <ContentPresenter Name="PART_Header"                  
+                                    ContentSource="Header"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center" />
+                        <ItemsPresenter Grid.Row="1"/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <StackPanel IsItemsHost="True"/>
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>-->
+</ResourceDictionary>

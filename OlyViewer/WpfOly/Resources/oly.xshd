@@ -1,0 +1,115 @@
+﻿<SyntaxDefinition name="oly" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Comment" foreground="Green" />
+  <Color name="Order" foreground="Blue" />
+  <!--<Color name="Command" foreground="Blue" />-->
+
+  <!-- This is the main ruleset. -->
+  <RuleSet>
+    <Span color="Comment" begin="#" />
+    <!--<Span color="Comment" multiline="true"
+       begin="/\*" end="\*/" />-->
+
+    <!--<Span color="String">
+      <Begin>"</Begin>
+      <End>"</End>
+      <RuleSet>
+        --><!-- nested span for escape sequences --><!--
+        <Span begin="\\" end="." />
+      </RuleSet>
+    </Span>-->
+
+    <Keywords fontWeight="bold" foreground="Blue">
+      <Word>unit</Word>
+      <Word>faction</Word>
+      <Word>begin</Word>
+      <Word>end</Word>
+    </Keywords>
+    
+    <Keywords color="Order">
+      <Word>accept</Word>
+      <Word>admit</Word>
+      <Word>attack</Word>
+      <Word>banner</Word>
+      <Word>behind</Word>
+      <Word>board</Word>
+      <Word>breed</Word>
+      <Word>bribe</Word>
+      <Word>build</Word>
+      <Word>buy</Word>
+      <Word>catch</Word>
+      <Word>claim</Word>
+      <Word>collect</Word>
+      <Word>contact</Word>
+      <Word>decree</Word>
+      <Word>default</Word>
+      <Word>defend</Word>
+      <Word>die</Word>
+      <Word>drop</Word>
+      <Word>email</Word>
+      <Word>execute</Word>
+      <Word>explore</Word>
+      <Word>fee</Word>
+      <Word>ferry</Word>
+      <Word>fish</Word>
+      <Word>flag</Word>
+      <Word>fly</Word>
+      <Word>forget</Word>
+      <Word>form</Word>
+      <Word>format</Word>
+      <Word>garrison</Word>
+      <Word>get</Word>
+      <Word>give</Word>
+      <Word>guard</Word>
+      <Word>honor</Word>
+      <Word>hostile</Word>
+      <Word>improve</Word>
+      <Word>lore</Word>
+      <Word>make</Word>
+      <Word>message</Word>
+      <Word>move</Word>
+      <Word>name</Word>
+      <Word>neutral</Word>
+      <Word>notab</Word>
+      <Word>oath</Word>
+      <Word>password</Word>
+      <Word>pay</Word>
+      <Word>pillage</Word>
+      <Word>players</Word>
+      <Word>pledge</Word>
+      <Word>post</Word>
+      <Word>press</Word>
+      <Word>promote</Word>
+      <Word>public</Word>
+      <Word>quarry</Word>
+      <Word>quest</Word>
+      <Word>quit</Word>
+      <Word>raze</Word>
+      <Word>recruit</Word>
+      <Word>repair</Word>
+      <Word>research</Word>
+      <Word>resend</Word>
+      <Word>rumor</Word>
+      <Word>sail</Word>
+      <Word>seek</Word>
+      <Word>sell</Word>
+      <Word>sneak</Word>
+      <Word>stack</Word>
+      <Word>stop</Word>
+      <Word>study</Word>
+      <Word>surrender</Word>
+      <Word>take</Word>
+      <Word>terrorize</Word>
+      <Word>times</Word>
+      <Word>train</Word>
+      <Word>ungarrison</Word>
+      <Word>unload</Word>
+      <Word>unstack</Word>
+      <Word>use</Word>
+      <Word>vis_email</Word>
+      <Word>wait</Word>
+      <Word>wood</Word>
+    </Keywords>
+      
+ 
+  </RuleSet>
+</SyntaxDefinition>

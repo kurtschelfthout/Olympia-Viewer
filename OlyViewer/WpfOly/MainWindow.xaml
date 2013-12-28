@@ -1,0 +1,303 @@
+﻿<Window x:Class="WpfOly.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:arrs="clr-namespace:WpfOly.Arrows"
+        xmlns:local="clr-namespace:WpfOly"
+        xmlns:d="clr-namespace:System.Windows.Data"
+        xmlns:toolkit="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Input.Toolkit"
+        Title="MainWindow" WindowState="Maximized">
+    <Window.Resources>
+        <Style TargetType="TreeViewItem">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TreeViewItem">
+                        <Grid Margin="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="6"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Name="Bd" Background="Transparent" Grid.ColumnSpan="2">
+                                <ContentPresenter Name="PART_Header" ContentSource="Header"  />
+                            </Border>
+                            <ItemsPresenter Grid.Row="1" Grid.Column="1"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <DataTemplate DataType="{x:Type local:Noble}">
+            <TextBlock Text="{Binding FormattedIdAndName}" FontStyle="Italic" ToolTip="{Binding ExtraInfo}" />
+        </DataTemplate>
+        <HierarchicalDataTemplate DataType="{x:Type local:InnerLocation}" ItemsSource="{Binding InnerLocations}">
+            <StackPanel x:Name="innerLoc_Stackpanel">
+                <TextBlock Text="{Binding FormattedIdAndName}" x:Name="txt" TextWrapping="WrapWithOverflow" 
+                            ToolTip="{Binding ExtraInfo}"/>
+                <ItemsControl ItemsSource="{Binding Nobles}"/>
+            </StackPanel>
+        </HierarchicalDataTemplate>
+        <DataTemplate DataType="{x:Type local:Province}">
+            <StackPanel Height="{Binding Width}" Width="{Binding Height}">
+                <StackPanel.Background>
+                    <MultiBinding Converter="{StaticResource ProvinceTypeToBrushConverter}">
+                        <Binding Path="Type"/>
+                        <Binding Path="Visited"/>
+                    </MultiBinding>
+                </StackPanel.Background>
+                <TextBlock Text="{Binding FormattedIdAndName}" Margin="2,2,2,0" x:Name="province_textBlock" ToolTip="{Binding ExtraInfo}" MouseDown="province_textBlock_MouseDown"/>
+                <Viewbox x:Name="province_ViewBox"  StretchDirection="DownOnly" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2,0">
+                    <StackPanel>
+                        <TreeView ItemsSource="{Binding InnerLocations}" Background="Transparent" BorderBrush="Transparent" 
+                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"  ScrollViewer.VerticalScrollBarVisibility="Disabled" >
+                        </TreeView>
+                        <ItemsControl ItemsSource="{Binding Nobles}"/>
+                    </StackPanel>
+                </Viewbox>
+                <!--<StackPanel.CacheMode>
+                    <BitmapCache />
+                </StackPanel.CacheMode>-->
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <!--<Trigger SourceName="province_textBlock" Property="IsMouseOver" Value="True">
+                    <Setter TargetName="province_textBlock" Property="Background" Value="LightGray"/>
+                </Trigger>-->
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ZoomableCanvas}, Path=Scale, Converter={StaticResource SmallerThanConverter}, ConverterParameter=0.2}" Value="true" >
+                    <Setter TargetName="province_ViewBox" Property="Visibility" Value="Collapsed"/>
+                    <Setter TargetName="province_textBlock" Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type local:Gate}">
+            <arrs:ArrowLine X1="{Binding FromX}" Y1="{Binding FromY}" 
+                            X2="{Binding ToX}" Y2="{Binding ToY}" 
+                            StrokeThickness="20" Stroke="DarkGoldenrod" Opacity=".5" 
+                            ArrowLength="24" IsArrowClosed="True" 
+                            ToolTip="{Binding Info}"/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type local:GateHit}">
+            <Viewbox StretchDirection="Both" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2,0"
+                     Width="{x:Static local:Map.lengthDouble}" Height="{x:Static local:Map.lengthDouble}">
+                <TextBlock Text="{Binding HitCount}" Foreground="DarkGoldenrod" />
+            </Viewbox>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type local:GateDetection}">
+            <Viewbox StretchDirection="Both" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2,0"
+                     Width="{x:Static local:Map.lengthDouble}" Height="{x:Static local:Map.lengthDouble}">
+                <TextBlock Text="X" Foreground="DarkGoldenrod" ToolTip="{Binding Distance}" />
+            </Viewbox>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type local:Garrison}">
+            <!--<Rectangle Fill="Gray" Height="72" Width="100" Stroke="Black" StrokeThickness="1"
+                     ToolTip="{Binding InventoryInfo}"/>-->
+            <Viewbox StretchDirection="Both" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2,0"
+                     Width="138" Height="72">
+                <TextBlock Text="{Binding Info}" Background="Aquamarine"/>
+            </Viewbox>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type local:TradeRoute}">
+            <arrs:ArrowLine X1="{Binding FromX}" Y1="{Binding FromY}" 
+                            X2="{Binding ToX}" Y2="{Binding ToY}" 
+                            StrokeThickness="20" Stroke="LawnGreen" Opacity=".5" 
+                            ArrowLength="24" IsArrowClosed="True" 
+                            ToolTip="{Binding Info}"/>
+        </DataTemplate>
+    </Window.Resources>
+    <DockPanel>
+        <WrapPanel DockPanel.Dock="Top" Orientation="Horizontal">
+            <Button x:Name="download" Content="Download" Click="download_Click" />
+            <Button x:Name="parse" Content="Parse" Click="parse_Click" />
+        </WrapPanel>
+        <DockPanel DockPanel.Dock="Right" MinWidth="400">
+            <WrapPanel DockPanel.Dock="Top">
+                <Button x:Name="open" Content="Open" Click="open_Click" />
+            </WrapPanel>
+            <avalonEdit:TextEditor DockPanel.Dock="Bottom"
+                xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+                Name="textEditor"
+                FontFamily="Consolas" 
+                FontSize="10pt"/>
+            
+        </DockPanel>
+        <TabControl DockPanel.Dock="Left">
+            <TabItem Header="Tunnels">
+                <ItemsControl Name="Tunnels" ClipToBounds="True">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <ZoomableCanvas Loaded="TunnelCanvas_Loaded"
+                                RealizationRate="100" 
+                                RealizationPriority="Background"
+                                PreviewMouseMove="Tunnels_PreviewMouseMove"
+                                PreviewMouseWheel="Tunnels_PreviewMouseWheel"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemContainerStyle>
+                        <Style>
+                            <Setter Property="Canvas.Left" Value="{Binding Path=X}" />
+                            <Setter Property="Canvas.Top" Value="{Binding Path=Y}" />
+                        </Style>
+                    </ItemsControl.ItemContainerStyle>
+                </ItemsControl>
+            </TabItem>
+            <TabItem Header="Faery">
+                <ItemsControl Name="Faery" ClipToBounds="True">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <ZoomableCanvas Loaded="FaeryCanvas_Loaded"
+                                RealizationRate="100" 
+                                RealizationPriority="Background"
+                                PreviewMouseMove="Faery_PreviewMouseMove"
+                                PreviewMouseWheel="Faery_PreviewMouseWheel"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemContainerStyle>
+                        <Style>
+                            <Setter Property="Canvas.Left" Value="{Binding Path=X}" />
+                            <Setter Property="Canvas.Top" Value="{Binding Path=Y}" />
+                        </Style>
+                    </ItemsControl.ItemContainerStyle>
+                </ItemsControl>
+            </TabItem>
+            <TabItem Header="Hades">
+                <ItemsControl Name="Hades" ClipToBounds="True">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <ZoomableCanvas Loaded="HadesCanvas_Loaded"
+                                RealizationRate="100" 
+                                RealizationPriority="Background"
+                                PreviewMouseMove="Hades_PreviewMouseMove"
+                                PreviewMouseWheel="Hades_PreviewMouseWheel"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemContainerStyle>
+                        <Style>
+                            <Setter Property="Canvas.Left" Value="{Binding Path=X}" />
+                            <Setter Property="Canvas.Top" Value="{Binding Path=Y}" />
+                        </Style>
+                    </ItemsControl.ItemContainerStyle>
+                </ItemsControl>
+            </TabItem>
+            <TabItem Header="Cloud">
+                <ItemsControl Name="Cloud" ClipToBounds="True">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <ZoomableCanvas Loaded="CloudCanvas_Loaded"
+                                RealizationRate="100" 
+                                RealizationPriority="Background"
+                                PreviewMouseMove="Cloud_PreviewMouseMove"
+                                PreviewMouseWheel="Cloud_PreviewMouseWheel"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemContainerStyle>
+                        <Style>
+                            <Setter Property="Canvas.Left" Value="{Binding Path=X}" />
+                            <Setter Property="Canvas.Top" Value="{Binding Path=Y}" />
+                        </Style>
+                    </ItemsControl.ItemContainerStyle>
+                </ItemsControl>
+            </TabItem>
+            <TabItem Header="Provinia" IsSelected="True">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <WrapPanel Panel.ZIndex="99" Grid.Row="0" >
+                        <WrapPanel.Resources>
+                            <Style TargetType="{x:Type CheckBox}">
+                                <Setter Property="Margin" Value="5,0,0,0"/>
+                            </Style>
+                        </WrapPanel.Resources>
+                        <toolkit:AutoCompleteBox
+                       ToolTip="Search for location id or name" Width="90"
+                       x:Name="search" ItemsSource="{Binding Path=SearchableStrings}"
+                       IsTextCompletionEnabled="True" />
+                        <Button Content="Go..." Name="goto" Click="goto_Click"/>
+                        <CheckBox Content="Map" Name="mapCheckBox"/>
+                        <CheckBox Content="Gates" Name="gateCheckBox"/>
+                        <CheckBox Content="Trade routes" Name="tradeRoutesCheckBox"/>
+                        <CheckBox Content="Garrisons" Name="garrisonsCheckBox"/>
+                    </WrapPanel>
+                    <ItemsControl Name="Provinces" Grid.Row="1" ClipToBounds="True">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <ZoomableCanvas Loaded="ProviniaCanvas_Loaded"
+                                RealizationRate="200" 
+                                RealizationPriority="ContextIdle"
+                                PreviewMouseMove="Provinces_PreviewMouseMove"
+                                PreviewMouseWheel="Provinces_PreviewMouseWheel">
+
+                                </ZoomableCanvas>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemContainerStyle>
+                            <Style>
+                                <Setter Property="Canvas.Left" Value="{Binding Path=X}" />
+                                <Setter Property="Canvas.Top" Value="{Binding Path=Y}" />
+                            </Style>
+                        </ItemsControl.ItemContainerStyle>
+                    </ItemsControl>
+                    <ZoomableCanvas Name="ImageCanvas" 
+                                Grid.Row="1" Scale="{Binding Scale}"
+                                Offset="{Binding Offset}"
+                                IsHitTestVisible="False">
+                        <Image Width="14400" Source="Resources\g3_map.jpg" Opacity="0.5"
+                                   Visibility="{Binding Path=IsChecked, ElementName=mapCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}" IsHitTestVisible="False" />
+                    </ZoomableCanvas>
+                    <ItemsControl Name="GatesLayer" Grid.Row="1" ClipToBounds="True" >
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <ZoomableCanvas Scale="{Binding Scale}" Offset="{Binding Offset}" Visibility="{Binding Path=IsChecked, ElementName=gateCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                    <ItemsControl Name="GateHitsLayer" Grid.Row="1" ClipToBounds="True">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <ZoomableCanvas 
+                                RealizationRate="200" 
+                                Scale="{Binding Scale}" Offset="{Binding Offset}"
+                                RealizationPriority="ContextIdle"
+                                Visibility="{Binding Path=IsChecked, ElementName=gateCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemContainerStyle>
+                            <Style>
+                                <Setter Property="Canvas.Left" Value="{Binding Path=LocationX}" />
+                                <Setter Property="Canvas.Top" Value="{Binding Path=LocationY}" />
+                            </Style>
+                        </ItemsControl.ItemContainerStyle>
+                    </ItemsControl>
+                    <ItemsControl Name="TradeRoutesLayer" Grid.Row="1" ClipToBounds="True" >
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <ZoomableCanvas Scale="{Binding Scale}" Offset="{Binding Offset}" Visibility="{Binding Path=IsChecked, ElementName=tradeRoutesCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                    <ItemsControl Name="GarrisonLayer" Grid.Row="1" ClipToBounds="True" >
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <ZoomableCanvas Scale="{Binding Scale}" Offset="{Binding Offset}" Visibility="{Binding Path=IsChecked, ElementName=garrisonsCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemContainerStyle>
+                            <Style>
+                                <Setter Property="Canvas.Left" Value="{Binding Path=GarrisonX}" />
+                                <Setter Property="Canvas.Top" Value="{Binding Path=GarrisonY}" />
+                            </Style>
+                        </ItemsControl.ItemContainerStyle>
+                    </ItemsControl>
+                </Grid>
+            </TabItem>
+        </TabControl>     
+    </DockPanel>
+</Window>
+
+

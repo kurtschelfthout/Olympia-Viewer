@@ -1,0 +1,131 @@
+﻿<Window x:Class="WpfOly.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ctrl="clr-namespace:WpfOly.Controls"
+        xmlns:local="clr-namespace:WpfOly"
+        Title="MainWindow" WindowState="Maximized">
+    <Window.Resources>
+        <HierarchicalDataTemplate DataType="{x:Type local:Province}" ItemsSource="{Binding InnerLocations}">
+            <TextBlock Text="{Binding FormattedIdAndName}"/>
+        </HierarchicalDataTemplate>
+        <HierarchicalDataTemplate DataType="{x:Type local:InnerLocation}" ItemsSource="{Binding InnerLocations}">
+            <TextBlock Text="{Binding FormattedIdAndName}" />
+        </HierarchicalDataTemplate>
+        <DataTemplate DataType="{x:Type local:City}">
+            <TextBlock Text="{Binding FormattedIdAndName}" />
+        </DataTemplate>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <WrapPanel Grid.Row="0">
+            <CheckBox Content="Map" Name="mapCheckBox"/>
+        </WrapPanel>
+
+        <ListBox Name="Squares" Grid.Row="1" ClipToBounds="True">
+            <ListBox.Resources>
+                <DataTemplate DataType="{x:Type local:Province}">
+                    <Border Height="{Binding Width}" Width="{Binding Height}">
+                        <Border.Background>
+                            <MultiBinding Converter="{StaticResource ProvinceTypeToBrushConverter}">
+                                <Binding Path="Type"/>
+                                <Binding Path="Visited"/>
+                            </MultiBinding>
+                        </Border.Background>
+                    </Border>
+                </DataTemplate>
+            </ListBox.Resources>
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <ZoomableCanvas Loaded="ZoomableCanvas_Loaded"
+                                    RealizationRate="200" 
+                                    RealizationPriority="Background" />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemContainerStyle>
+                <Style>
+                    <Setter Property="Canvas.Left" Value="{Binding Path=X}" />
+                    <Setter Property="Canvas.Top" Value="{Binding Path=Y}" />
+                </Style>
+            </ListBox.ItemContainerStyle>
+        </ListBox>
+
+        <TreeView Name="Provinces" Grid.Row="1" Background="Transparent" 
+                  Width="{Binding ActualWidth}"
+                  Height="{Binding ActualHeight}"
+                  PreviewMouseMove="Provinces_PreviewMouseMove"
+                  PreviewMouseWheel="Provinces_PreviewMouseWheel">
+            <TreeView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <ZoomableCanvas Scale="{Binding Scale}"
+                                    Offset="{Binding Offset}"
+                                    RealizationRate="100" 
+                                    RealizationPriority="Background"
+                                    ApplyTransform="False"/>
+                </ItemsPanelTemplate>
+            </TreeView.ItemsPanel>
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="TreeViewItem">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="TreeViewItem">
+                                <Grid Margin="2">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="6"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Name="Bd" Background="Transparent" Grid.ColumnSpan="2">
+                                        <ContentPresenter Name="PART_Header" ContentSource="Header"  />
+                                    </Border>
+                                    <ItemsPresenter Grid.Row="1" Grid.Column="1"/>
+
+                                </Grid>
+                                <ControlTemplate.Triggers>
+
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter
+                                            TargetName="Bd"
+                                            Property="Border.BorderBrush"                     
+                                            Value="Black" />
+                                        <Setter
+                                            TargetName="Bd"
+                                            Property="TextElement.Foreground"                   
+                                            Value="{DynamicResource 
+                                              {x:Static SystemColors.HighlightTextBrushKey}}" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                            
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="Canvas.Left" Value="{Binding Path=X}" />
+                    <Setter Property="Canvas.Top" Value="{Binding Path=Y}" />
+                    <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="ItemsPanel">
+                        <Setter.Value>
+                            <ItemsPanelTemplate>
+                                <StackPanel IsItemsHost="True"/>
+                            </ItemsPanelTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </TreeView.ItemContainerStyle>
+        </TreeView>
+
+        <ZoomableCanvas Grid.Row="1" Scale="{Binding Scale}"  Offset="{Binding Offset}" Width="{Binding ActualWidth}"
+                      Height="{Binding ActualHeight}">
+            <Image  Width="10800" Source="g3_map.jpg" Opacity="0.5"
+                    Visibility="{Binding Path=IsChecked, ElementName=mapCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}" 
+                    IsHitTestVisible="False" />
+        </ZoomableCanvas>
+    </Grid>
+</Window>
+
+
