@@ -19,11 +19,11 @@
 (defn map-values [f m] (into {} (for [[k v] m] [k (f v)])))
 
 
-(def base-report-url "http://olympia.v-labs.be/g3/reports/")
+(def base-report-url "http://www.shadowlandgames.com/olympia/turns")
 ;(def base-report-folder "C:\\Users\\Kurt\\Projects\\oly\\reports\\")
 (def base-report-folder "reports\\")
-(def public-report-list-url "http://olympia.v-labs.be/g3/node/410")
-(def base-public-report-url "http://olympia.v-labs.be/g3/Public/")
+(def public-report-list-url "http://www.shadowlandgames.com/olympia/public/")
+(def base-public-report-url "http://www.shadowlandgames.com/olympia/public/")
 
 (defrecord Faction [^String id ^String password ^String player])
 
@@ -31,7 +31,8 @@
     [])
       
 (defn download-web-page
-    "Downloads the webpage at the given url and returns its contents. Assumes no credentials are needed if
+    "Downloads the webpage at the given url and returns its contents. 
+	Assumes no credentials are needed if
     password is nil."
     ([^String url] (download-web-page url nil nil))
     ([^String url ^String user ^String password]
@@ -41,11 +42,16 @@
     (.DownloadString client url))))
       
 (defn save-report
-    "Downloads the given turn for the given faction with the given password from the given base url/turn/factionid, and saves it at the default location <turn>/factionid under the given folder. If a password is not given, it's assumed the report is a public report. Returns false if the report already existed, and true if it did not and so was downloaded."
+    "Downloads the given turn for the given faction with the given 
+	password from the given base url/turn/factionid, and saves it at 
+	the default location <turn>/factionid under the given folder. 
+	If a password is not given, it's assumed the report is a public report. 
+	Returns false if the report already existed, and true if it did not 
+	and so was downloaded."
     ([turn ^String faction-id] (save-report turn faction-id nil))
     ([turn ^String faction-id ^String password]
     (let     [url (if password (str base-report-url turn "/" faction-id "/")
-                              (str base-public-report-url turn "_" faction-id ".html"))
+                              (str base-public-report-url turn "." faction-id ".html"))
              path (Path/Combine base-report-folder (str turn))
              file (Path/Combine path (str faction-id ".htm"))]
     (do 
@@ -54,10 +60,11 @@
             false
             (try (do (File/WriteAllText file (download-web-page url faction-id password)) true) 
               (catch System.Net.WebException e false)))))))
-    
+   
+	
 (defn list-available-public-reports []
     (let [page-seq (line-seq (StringReader. (download-web-page public-report-list-url)))
-          match (fn [line] (re-seq #".* href=\"/g3/Public/(\d+)_([a-z][a-z]\d).*\">" line))
+          match (fn [line] (re-seq #".* href=\"(\d+)\.([a-z][a-z]\d).*\">" line))
          ]
      (filter not-empty (map (comp rest first match) page-seq))))
         
