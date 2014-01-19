@@ -23,7 +23,6 @@ namespace WpfOly
             Undercity,
             Hades,
             Faery,
-            //Cloudlands
             Cloud,
         }
 
@@ -44,8 +43,8 @@ namespace WpfOly
 
         public static readonly int length = 36 * 4;
         public static readonly double lengthDouble = (double)length;
-        public int width = 100;
-        public int height = 100;
+        public int width = 80;
+        public int height = 80;
 
         private Province[] provinces = new Province[0];
 
