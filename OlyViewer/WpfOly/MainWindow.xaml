@@ -106,10 +106,10 @@
         </DataTemplate>
     </Window.Resources>
     <DockPanel>
-        <WrapPanel DockPanel.Dock="Top" Orientation="Horizontal">
+        <!--<WrapPanel DockPanel.Dock="Top" Orientation="Horizontal">
             <Button x:Name="download" Content="Download" Click="download_Click" />
             <Button x:Name="parse" Content="Parse" Click="parse_Click" />
-        </WrapPanel>
+        </WrapPanel>-->
         <DockPanel DockPanel.Dock="Right" MinWidth="400">
             <WrapPanel DockPanel.Dock="Top">
                 <Button x:Name="open" Content="Open" Click="open_Click" />

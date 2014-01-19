@@ -498,68 +498,68 @@ namespace WpfOly
                 });
         }
 
-        private void download_Click(object sender, RoutedEventArgs e)
-        {
-            if (!busy)
-            {
-                busy = true;
-                download.IsEnabled = false;
-                parse.IsEnabled = false;
-                download.Content = "Downloading";
-                parse.Content = "Downloading";
-                var bg = new BackgroundWorker();
-                bg.DoWork += (s, ee) =>
-                {
-                    var l = loadAnalyze.Value;
-                    var output = clojure.lang.RT.var("analyze", "save-reports");
-                    //var loc = @"C:\Users\Kurt\Projects\oly\reports";
-                    var loc = @"reports";
-                    var dirs = Directory.GetDirectories(loc);
-                    var latestTurn = dirs.Max(name => Int32.Parse(name.Split('\\').Last()));
-                    ee.Result = output.invoke(latestTurn + 1);
-                };
-                bg.RunWorkerCompleted += (s, ee) =>
-                    {
-                        MessageBox.Show("Downloaded " + ee.Result.ToString() + " turn reports.");
-                        busy = false;
-                        download.IsEnabled = true;
-                        parse.IsEnabled = true;
-                        download.Content = "Download";
-                        parse.Content = "Parse";
-                    };
-                bg.RunWorkerAsync();
-            }
-        }
+        //private void download_Click(object sender, RoutedEventArgs e)
+        //{
+        //    if (!busy)
+        //    {
+        //        busy = true;
+        //        download.IsEnabled = false;
+        //        parse.IsEnabled = false;
+        //        download.Content = "Downloading";
+        //        parse.Content = "Downloading";
+        //        var bg = new BackgroundWorker();
+        //        bg.DoWork += (s, ee) =>
+        //        {
+        //            var l = loadAnalyze.Value;
+        //            var output = clojure.lang.RT.var("analyze", "save-reports");
+        //            //var loc = @"C:\Users\Kurt\Projects\oly\reports";
+        //            var loc = @"reports";
+        //            var dirs = Directory.GetDirectories(loc);
+        //            var latestTurn = dirs.Max(name => Int32.Parse(name.Split('\\').Last()));
+        //            ee.Result = output.invoke(latestTurn + 1);
+        //        };
+        //        bg.RunWorkerCompleted += (s, ee) =>
+        //            {
+        //                MessageBox.Show("Downloaded " + ee.Result.ToString() + " turn reports.");
+        //                busy = false;
+        //                download.IsEnabled = true;
+        //                parse.IsEnabled = true;
+        //                download.Content = "Download";
+        //                parse.Content = "Parse";
+        //            };
+        //        bg.RunWorkerAsync();
+        //    }
+        //}
 
 
-        private void parse_Click(object sender, RoutedEventArgs e)
-        {
-            if (!busy)
-            {
-                busy = true;
-                download.IsEnabled = false;
-                parse.IsEnabled = false;
-                download.Content = "Parsing";
-                parse.Content = "Parsing";
-                var bg = new BackgroundWorker();
-                bg.DoWork += (s, ee) =>
-                {
-                    var l = loadAnalyze.Value;
-                    var output = clojure.lang.RT.var("analyze", "make-reports-xml");
-                    ee.Result = output.invoke();
-                };
-                bg.RunWorkerCompleted += (s, ee) =>
-                {
-                    MessageBox.Show("Done parsing. Now Restart.");
-                    busy = false;
-                    download.IsEnabled = true;
-                    parse.IsEnabled = true;
-                    download.Content = "Download";
-                    parse.Content = "Parse";
-                };
-                bg.RunWorkerAsync();
-            }
-        }
+        //private void parse_Click(object sender, RoutedEventArgs e)
+        //{
+        //    if (!busy)
+        //    {
+        //        busy = true;
+        //        download.IsEnabled = false;
+        //        parse.IsEnabled = false;
+        //        download.Content = "Parsing";
+        //        parse.Content = "Parsing";
+        //        var bg = new BackgroundWorker();
+        //        bg.DoWork += (s, ee) =>
+        //        {
+        //            var l = loadAnalyze.Value;
+        //            var output = clojure.lang.RT.var("analyze", "make-reports-xml");
+        //            ee.Result = output.invoke();
+        //        };
+        //        bg.RunWorkerCompleted += (s, ee) =>
+        //        {
+        //            MessageBox.Show("Done parsing. Now Restart.");
+        //            busy = false;
+        //            download.IsEnabled = true;
+        //            parse.IsEnabled = true;
+        //            download.Content = "Download";
+        //            parse.Content = "Parse";
+        //        };
+        //        bg.RunWorkerAsync();
+        //    }
+        //}
 
         private void province_textBlock_MouseDown(object sender, MouseButtonEventArgs e)
         {
