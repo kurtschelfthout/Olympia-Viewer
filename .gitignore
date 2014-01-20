@@ -215,3 +215,4 @@ pip-log.txt
 .mr.developer.cfg
 
 OlyViewer/WpfOly/Clj/factions.clj
+parse-report/src/parse_report/factions.clj
