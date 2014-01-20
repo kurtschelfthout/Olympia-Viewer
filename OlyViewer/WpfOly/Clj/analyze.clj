@@ -5,7 +5,7 @@
              (System.IO File Path Directory StringReader)
              (System.Xml.Linq XDocument XElement XAttribute XName)
              (System.Text.RegularExpressions Regex))
-    (:use clojure.core tables clojure.set))
+    (:use clojure.core factions tables clojure.set))
 
 ; (defn seq-counter 
   ; "calls callback after every n'th entry in sequence is evaluated. 
@@ -19,16 +19,11 @@
 (defn map-values [f m] (into {} (for [[k v] m] [k (f v)])))
 
 
-(def base-report-url "http://www.shadowlandgames.com/olympia/turns")
+(def base-report-url "http://www.shadowlandgames.com/olympia/turns/")
 ;(def base-report-folder "C:\\Users\\Kurt\\Projects\\oly\\reports\\")
 (def base-report-folder "reports\\")
 (def public-report-list-url "http://www.shadowlandgames.com/olympia/public/")
 (def base-public-report-url "http://www.shadowlandgames.com/olympia/public/")
-
-(defrecord Faction [^String id ^String password ^String player])
-
-(def factions 
-    [])
       
 (defn download-web-page
     "Downloads the webpage at the given url and returns its contents. 
@@ -50,16 +45,17 @@
 	and so was downloaded."
     ([turn ^String faction-id] (save-report turn faction-id nil))
     ([turn ^String faction-id ^String password]
-    (let     [url (if password (str base-report-url turn "/" faction-id "/")
-                              (str base-public-report-url turn "." faction-id ".html"))
+    (let     [url (if password (str base-report-url faction-id "/") ;prev.html") todo
+                               (str base-public-report-url turn "." faction-id))
              path (Path/Combine base-report-folder (str turn))
              file (Path/Combine path (str faction-id ".htm"))]
     (do 
+		;(print url "\n" file "\n")
         (if (not (Directory/Exists path)) (Directory/CreateDirectory path))
         (if (File/Exists file)
             false
             (try (do (File/WriteAllText file (download-web-page url faction-id password)) true) 
-              (catch System.Net.WebException e false)))))))
+              (catch System.Net.WebException e (do (print e) false))))))))
    
 	
 (defn list-available-public-reports []
@@ -72,7 +68,7 @@
     "Downloads the turn reports for all factions up to and including the given turn that weren't already downloaded in the reports folder. Returns the number of downloaded reports."
     [until-turn]
     (let     [down-one (fn [[turn faction-id faction-password]] (if (save-report turn faction-id faction-password) 1 0))
-             turns-factions (for [turn (range 1 (inc until-turn)) faction factions] [turn (:id faction) (:password faction)])]
+             turns-factions (for [faction factions] [until-turn (:id faction) (:password faction)])]
     (reduce + (pmap down-one (concat turns-factions 
                                     (map #(concat % [nil]) (list-available-public-reports)))))))
     
@@ -646,7 +642,7 @@
 (defn match-turn-and-faction 
     [{ :keys [line] :as acc}]
     (let [line (remove-html line)
-          turn "Olympia G3 turn "
+          turn "Olympia G4 turn "
           len-turn (.Length turn)
           faction "Report for "
           len-faction (.Length faction)
