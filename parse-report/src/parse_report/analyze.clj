@@ -1,7 +1,10 @@
 (ns analyze
+    (:import (java.io BufferedReader StringReader))
     (:require [clj-http.client :as client]
-              [clojure.java.io :as io])
-    (:use clojure.core factions tables clojure.set))
+              [clojure.java.io :as io]
+              [clojure.string :as string]
+              [clojure.set :as set])
+    (:use clojure.core tables factions))
 
 (defn map-values [f m] (into {} (for [[k v] m] [k (f v)])))
 
@@ -37,9 +40,8 @@
             (try (do (spit file (download-web-page url faction-id password)) true)
               (catch Exception e (do (print e) false))))))))
 
-
 (defn list-available-public-reports []
-    (let [page-seq (line-seq (StringReader. (download-web-page public-report-list-url)))
+    (let [page-seq (clojure.string/split-lines (download-web-page public-report-list-url))
           match (fn [line] (re-seq #".* href=\"(\d+)\.([a-z][a-z]\d).*\">" line))
          ]
      (filter not-empty (map (comp rest first match) page-seq))))
@@ -48,10 +50,9 @@
     "Downloads the turn reports for all factions up to and including the given turn that weren't already downloaded in the reports folder. Returns the number of downloaded reports."
     [until-turn]
     (let     [down-one (fn [[turn faction-id faction-password]] (if (save-report turn faction-id faction-password) 1 0))
-             turns-factions (for [faction factions] [until-turn (:id faction) (:password faction)])]
+             turns-factions (for [faction factions/factions] [until-turn (:id faction) (:password faction)])]
     (reduce + (pmap down-one (concat turns-factions
                                     (map #(concat % [nil]) (list-available-public-reports)))))))
-
 
 (defn numbers [n]
     (let [words {"zero" 0, "one" 1, "two" 2,
@@ -106,14 +107,14 @@
     (let [match (first (re-seq #"([1-3]?[0-9]): ?(.*)" line))]
     (if (empty? match)
         [line nil]
-        [(nth match 2) (Int32/Parse (nth match 1))])))
+        [(nth match 2) (Integer. (nth match 1))])))
 
 (defn parse-distance [^String distance-word]
     "Parses the word to a int. The word should be of the form <int> something, or impassable. In the latter case, -1 is returned."
     ;(do (print distance-word)
     (if (.Equals "impassable" distance-word)
         -1
-        (Int32/Parse (first (split-line distance-word \space)))))
+        (Integer. (first (split-line distance-word \space)))))
 
 (defn parse-word-id [^String route-to]
     "Parse something of the form 'foo bar [id]' by extracting the bit before the brackets and the bit between the brackets and returning both of those as a tuple."
@@ -167,8 +168,8 @@
 
 (defn get-skills [^String line]
     (let [skill-words (split-line line \,)]
-    (map (fn [skill-word] (let [[_ skill-nb] (parse-word-id skill-word)] (Int32/Parse skill-nb)))
-         (filter #(and (not (String/IsNullOrEmpty %)) (.Contains % "[")) skill-words))))
+    (map (fn [skill-word] (let [[_ skill-nb] (parse-word-id skill-word)] (Integer. skill-nb)))
+         (filter #(and (not (string/blank? %)) (.Contains % "[")) skill-words))))
 
 (defrecord Trade [buysell who price quantity weight-per-item item-name item-id])
 (defn make-trade [buysell who price quantity weight-per-item item-name item-id]
@@ -207,7 +208,7 @@
     [{ :keys [loc-in-progress locations line turn faction] :as acc}]
     (let [[line _] (remove-day line)]
     (cond
-        (String/IsNullOrWhiteSpace line)
+        (string/blank? line)
             (assoc acc :cont match-loc-header)
         (not= 3 (indent-of line))
             (assoc acc :cont match-inner-loc)
@@ -220,7 +221,7 @@
 (defn match-skills-taught
     [{ :keys [loc-in-progress line] :as acc}]
     (let [[line _] (remove-day line)]
-    (if (String/IsNullOrWhiteSpace line)
+    (if (string/blank? line)
         (assoc acc :cont match-loc-header)
         (let [new-skills (get-skills line)
               skills (concat (:skills loc-in-progress) new-skills)
@@ -231,7 +232,7 @@
 (defn match-rumored-city
     [{ :keys [locations line] :as acc}]
     (let [[line _] (remove-day line)]
-    (if (String/IsNullOrWhiteSpace line)
+    (if (string/blank? line)
         (assoc acc :cont match-loc-header)
         (let [[city province] (get-rumored-city-info line)]
         (assoc acc  :locations     (add-loc (add-loc locations city) province)
@@ -243,7 +244,7 @@
           parts (split-line line \,)]
     ;(do (println line)
     (cond
-        (String/IsNullOrWhiteSpace line)
+        (string/blank? line)
             (assoc acc :cont match-loc-header)
         (not= 3 (indent-of line))
             (assoc acc :cont match-route)
@@ -259,14 +260,14 @@
 (defn remove-html [line]
     "Removes html markup from a line of text. Contents in between tags is preserved."
     (if (.StartsWith line "<") ;optimization - most lines have no html
-        (Regex/Replace line, "<(.|\n)*?>" "")
+        (string/replace line, "<(.|\n)*?>" "")
         line))
 
 (defn get-civ-info [etc]
     (if (.Contains etc "wilderness")
         0
         (let [civ (second (re-matches #".*?civ-([0-9])" etc))]
-        (if civ (Int32/Parse civ)))))
+        (if civ (Integer. civ)))))
 
 (defn get-loc-info [line turn faction]
     "Gets location info from a line if it is a location header - otherwise, returns nil."
@@ -307,7 +308,7 @@
                 (assoc acc :cont match-loc-header)
 		(or (.StartsWith line "It is windy.")
 		    (.StartsWith line "It is raining.")
-			(.StartsWith line "The province is blanketed in fog.")
+			  (.StartsWith line "The province is blanketed in fog.")
 		    (.StartsWith line "Seen here"))
 			; we are done with the current loc - need this to fix a bug
 			; e.g. vision loc, then vision ship. The ship is not recognized as a location,
@@ -372,7 +373,7 @@
     (let [match (first (re-seq #"^   [^\[]+ \[([^\]]{4})\], (sealed, )?to [^\[]+ \[([^\]]{4})\]" line))]
     ;(do (print line)
     (if (not (empty? match))
-        (make-gate (nth match 1) current-loc (nth match 3) (not (String/IsNullOrEmpty (nth match 2)))))))
+        (make-gate (nth match 1) current-loc (nth match 3) (not (string/blank? (nth match 2)))))))
 
 (defrecord GateDistance [location distance])
 (defn make-gate-distance [location distance]
@@ -418,11 +419,11 @@
     (let [[x y] [(mod x 100) (mod y 100)]
           letters (filter (complement #{\e \i \l \o \u \y }) (map char (range \a (inc \z))))
           co-to-letter (zipmap (range 100) (for [i (take 6 letters) j letters] (apply str (list i j))))]
-    (apply str (list (co-to-letter x) (String/Format "{0:00}" y)))))
+    (apply str (list (co-to-letter x) (format "%02" y)))))
 
 (defn provinces-at-distance [locid dist compare-fn]
     (let [[x y :as c] (locid-to-co locid)
-          manhattan-dist (fn [[x1 y1] [x2 y2]] (+ (Math/Abs (- x1 x2)) (Math/Abs (- y1 y2))))]
+          manhattan-dist (fn [[x1 y1] [x2 y2]] (+ (Math/abs (- x1 x2)) (Math/abs (- y1 y2))))]
     (for [rx (range (- x dist) (inc (+ x dist))) ry (range (- y dist) (inc (+ y dist)))
           :when (compare-fn (manhattan-dist c [rx ry]) dist)]
           (co-to-locid [rx ry]))))
@@ -476,7 +477,7 @@
     "Parses something like '15: Arrival at Whiteoak Marsh [bk46].' and returns the day and the location id."
     (let [match (first (re-seq #"^([\d|\s]\d): Arrival at [^\[]+ \[([^\]]{3,5})\]" (remove-html line)))]
     (if (not (empty? match))
-        (list (Int32/Parse (nth match 1)) (nth match 2)))))
+        (list (Integer. (nth match 1)) (nth match 2)))))
 
 (defn match-noble-info
     [{ :keys [nobles noble-in-progress turn current-loc explores gates gate-distances line] :as acc}] ;add have-arrival to args
@@ -630,7 +631,7 @@
           len-init-faction (.Length init-faction)]
     (cond
         (.StartsWith line turn)
-            (assoc acc :turn (Int32/Parse (.Substring line len-turn))
+            (assoc acc :turn (Integer. (.Substring line len-turn))
                         :cont match-turn-and-faction)
         (.StartsWith line faction)
             (assoc acc :faction (nth (parse-word-id (.Substring line len-faction)) 1)
