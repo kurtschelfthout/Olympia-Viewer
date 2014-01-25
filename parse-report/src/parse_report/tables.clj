@@ -1,26 +1,26 @@
 
-(ns tables
+(ns parse-report.tables
     (:use clojure.core))
 
 ; A bunch of static data gathered from the rules and the source.
-    
+
 (defrecord Skill [name id learning-time req-nps sub-skills usage-template])
-(defn make-skill 
-    ([name id learning-time] 
+(defn make-skill
+    ([name id learning-time]
         (make-skill name id learning-time 0 nil nil))
-	([name id learning-time req-nps sub-skills] 
+	([name id learning-time req-nps sub-skills]
         (make-skill name id learning-time req-nps sub-skills nil))
-    ([name id learning-time req-nps sub-skills usage-template] 
+    ([name id learning-time req-nps sub-skills usage-template]
         (Skill. name id learning-time req-nps sub-skills usage-template)))
-		
+
 (def skills
     [
-    (make-skill "Shipcraft"             600 3 0 
+    (make-skill "Shipcraft"             600 3 0
 		[
 		  (make-skill "Sailing"             601  2)
 		  (make-skill "Shipbuilding"        602  2)
 		  (make-skill "Fishing"             603  2)
-		]) 
+		])
     (make-skill "Combat"                610 3 0
 		[
 		   (make-skill "Survive fatal wound" 611 4)
@@ -31,7 +31,7 @@
 		   (make-skill "Swordplay" 			 616 2)
 		   (make-skill "Weaponsmithing" 	 617 2)
 		])
-    (make-skill "Stealth"               630 4 0 
+    (make-skill "Stealth"               630 4 0
 		[
 		   (make-skill "Petty thievery" 					631  2)
 		   (make-skill "Determine inventory of character" 	632  2)
@@ -42,8 +42,8 @@
 		   (make-skill "Torture prisoner" 					637  3)
 		   (make-skill "Sneak into structure" 				639  3)
 		   (make-skill "Conceal self" 						641  4)
-		]) 
-    (make-skill "Beastmastery"          650 4 1 
+		])
+    (make-skill "Beastmastery"          650 4 1
 		[
 			(make-skill "Bird spy" 						651 3)
 			(make-skill "Capture beasts in battle" 		652 4)
@@ -56,7 +56,7 @@
 			(make-skill "Persuade wild men to remain" 		659 3)
 			(make-skill "Breed hound" 						661 3)
 		])
-    (make-skill "Persuasion"            670 4 0 
+    (make-skill "Persuasion"            670 4 0
 		[
 			(make-skill "Bribe noble" 				671 2)
 			(make-skill "Persuade oathbound noble" 672 3)
@@ -64,14 +64,14 @@
 			(make-skill "Rally peasant mob" 		674 3)
 			(make-skill "Incite mob violence" 		675 3)
 			(make-skill "Train angry peasants" 	676 2)
-		]) 
+		])
     (make-skill "Construction"          680 3 0
 		[
 			(make-skill "Construct siege tower" 681  2)
 			(make-skill "Stone quarrying" 		682  2)
-		]) 
-    (make-skill "Alchemy"               690 4 0 
-		[ 
+		])
+    (make-skill "Alchemy"               690 4 0
+		[
 			(make-skill "Extract venom from ratspider" 	691 3)
 			(make-skill "Make potion of slavery" 		692 3)
 			(make-skill "Brew healing potion" 			693 3)
@@ -79,8 +79,8 @@
 			(make-skill "Record skill on scroll" 		695 3)
 			(make-skill "Collect rare elements" 		696 2)
 			(make-skill "Turn lead into gold" 			697 4)
-		]) 
-    (make-skill "Forestry"              700 3 0 
+		])
+    (make-skill "Forestry"              700 3 0
 		[
 			(make-skill "Construct battering ram" 	701  2)
 			(make-skill "Harvest lumber" 			702  2)
@@ -89,20 +89,20 @@
 			(make-skill "Harvest mallorn wood" 		705  2)
 			(make-skill "Harvest opium" 			706  2)
 			(make-skill "Improve opium production" 	707  2)
-		]) 
+		])
     (make-skill "Mining"                720 3 0
 		[
 			(make-skill "Mine iron" 			721 2)
 			(make-skill "Mine gold" 			722 2)
 			(make-skill "Mine mithril" 			723 2)
-		]) 
-    (make-skill "Trade"                 730 3 0 
+		])
+    (make-skill "Trade"                 730 3 0
 		[
 			(make-skill "Conceal identity of trader" 731 2)
 			(make-skill "Find tradegood for sale" 	 732 2)
 			(make-skill "Find market for tradegood"  733 2)
-		]) 
-    (make-skill "Religion"              750 5 1 
+		])
+    (make-skill "Religion"              750 5 1
 		[
 			(make-skill "Receive vision" 				751 4)
 			(make-skill "Resurrect dead noble" 			752 4)
@@ -111,7 +111,7 @@
 			(make-skill "Remove blessing from soldiers" 755 4)
 			(make-skill "Immunity from Vision" 			756 4)
 		])
-    (make-skill "Magic"                 800 4 1 
+    (make-skill "Magic"                 800 4 1
 		[
 			(make-skill "Meditate" 							801 2)
 			(make-skill "Perform common tasks for gold" 	802 2)
@@ -126,7 +126,7 @@
 			(make-skill "Dispel ability shroud" 			812 3)
 			(make-skill "Advanced meditation" 				813 3)
 			(make-skill "Hinder meditation" 				814 3)
-		]) 
+		])
     (make-skill "Weather magic"         820 5 1
 		[
 			(make-skill "Fierce wind" 				821 3)
@@ -141,8 +141,8 @@
 			(make-skill "Lightning bolt" 			831 4)
 			(make-skill "Seize control of storm" 	832 3)
 			(make-skill "Fog of death" 				833 3)
-		]) 
-    (make-skill "Scrying"               840 5 1 
+		])
+    (make-skill "Scrying"               840 5 1
 		[
 			(make-skill "Scry location" 						841 3)
 			(make-skill "Shroud location from magical scry" 	842 2)
@@ -155,7 +155,7 @@
 			(make-skill "Farcasting" 							849 3)
 			(make-skill "Save farcast state" 					851 3)
 			(make-skill "Banish undead" 						852 3)
-		]) 
+		])
     (make-skill "Gatecraft"             860 5 1
 		[
 			(make-skill "Teleport" 						861 2)
@@ -169,7 +169,7 @@
 			(make-skill "Notify of gate jumps" 			869 2)
 			(make-skill "Language of the Ancients" 		871 3)
 			(make-skill "Reverse jump through gate" 	872 3)
-		]) 
+		])
     (make-skill "Artifact construction" 880 6 1
 		[
 			(make-skill "Forge auraculum" 					881 2)
@@ -185,8 +185,8 @@
 			(make-skill "Arcane symbols" 					892 3)
 			(make-skill "Destroy artifact" 					893 3)
 			(make-skill "Forge palantir" 					894 3)
-		]) 
-    (make-skill "Necromancy"            900 6 2 
+		])
+    (make-skill "Necromancy"            900 6 2
 		[
 			(make-skill "Transcend death" 				901 4 1 nil)
 			(make-skill "Runes of Evil" 				902 3)
@@ -205,8 +205,8 @@
 			(make-skill "Teleport items" 	922 4)
 		])
     ])
-     
-    
+
+
 (defrecord Quest [where what at-least at-most])
 
 (def quests
@@ -267,7 +267,7 @@
     (Quest. "tunnel chamber 5-6"     282     5    15 )
     (Quest. "tunnel chamber 5-6"     278     5    15 )
     ])
-    
+
 (defrecord Creature [id name swamp man beast attack defense missile])
 
 (def creatures
@@ -323,7 +323,7 @@
     (Creature.    293    "faery"                false       true      false     9    9    9    )
     (Creature.    295    "hound"             true          false     false     1    1    0        )
     ])
-    
+
 (defrecord Item [id name weight land ride fly])
 
 (def items
@@ -420,7 +420,7 @@
     (Item.  401 "Imperial Throne"     0    0    0    0)
     ])
 
-           
+
 (defrecord InnerLoc [province-type subloc-type weight hidden])
 
 (def innerlocs
@@ -453,7 +453,7 @@
     (InnerLoc. "plain"      "cave"              10     :yes)
     (InnerLoc. "plain"      "battlefield"       6      :rnd)
     ])
-    
+
 (defrecord Production [location-type item-id quantity])
 
 (def productions
@@ -483,5 +483,4 @@
     (Production. "plain"          	10	10)
     (Production. "city"           	10	10)
     ])
-    
-    
+

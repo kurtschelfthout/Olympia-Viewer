@@ -1,10 +1,12 @@
-(ns analyze
+(ns parse-report.analyze
     (:import (java.io BufferedReader StringReader))
     (:require [clj-http.client :as client]
               [clojure.java.io :as io]
               [clojure.string :as string]
-              [clojure.set :as set])
-    (:use clojure.core tables factions))
+              [clojure.set :as set]
+              [parse-report.factions :as factions]
+              [parse-report.tables :as tables])
+    (:use clojure.core))
 
 (defn map-values [f m] (into {} (for [[k v] m] [k (f v)])))
 
@@ -88,8 +90,8 @@
 	      [loser winner] (if (> (last-visited (:visits new-loc)) (last-visited (:visits in-res))) ;most accurate info if we've been later
 							[in-res new-loc]
 							[new-loc in-res])]
-    (update-in (assoc (merge loser winner) :visits (union (:visits in-res) (:visits new-loc)))
-			   [:routes] union (:routes loser)))) ; need something smarter here to get rid of buildings. But location reports of garrisons are empty. Maybe should detect that and not parse those as locations.
+    (update-in (assoc (merge loser winner) :visits (set/union (:visits in-res) (:visits new-loc)))
+			   [:routes] set/union (:routes loser)))) ; need something smarter here to get rid of buildings. But location reports of garrisons are empty. Maybe should detect that and not parse those as locations.
 
 (defn add-loc [locations ^Location loc-to-add]
     "Adds the loc-to-add if it does not exist in locations. Otherwise, merges it with
@@ -99,8 +101,8 @@
         (assoc locations id (merge-locations (locations id) loc-to-add))
         (conj locations {(:id loc-to-add) loc-to-add}))))
 
-(defn split-line [^String line char]
-    (map #(.Trim %) (.Split line (into-array [char]))))
+(defn split-line [^String line rg]
+    (map #(string/trim %) (string/split line rg)))
 
 (defn remove-day [^String line]
     "Removes the day from the front of the line if it exists; and returns the line and the day."
@@ -114,11 +116,11 @@
     ;(do (print distance-word)
     (if (.Equals "impassable" distance-word)
         -1
-        (Integer. (first (split-line distance-word \space)))))
+        (Integer. (first (split-line distance-word #" ")))))
 
 (defn parse-word-id [^String route-to]
     "Parse something of the form 'foo bar [id]' by extracting the bit before the brackets and the bit between the brackets and returning both of those as a tuple."
-    (let [parts (split-line route-to \[)
+    (let [parts (split-line route-to #"\[")
           before (first parts)
           id (.TrimEnd (last parts) (into-array [ \] \. ]))]
     [before id]))
@@ -131,7 +133,7 @@
     (if (location-types t) t)))
 
 (defn get-route-info [split-route]
-    (let [split-route (if (.StartsWith (first split-route) "To") (cons "Id" split-route) split-route) ; if we don't have a direction, put the 'explicit id' direction at the front
+    (let [split-route (if (.startsWith (first split-route) "To") (cons "Id" split-route) split-route) ; if we don't have a direction, put the 'explicit id' direction at the front
 	      direction (first split-route)
           hidden (if (some #(= "hidden" %) split-route) true false)
           distance (parse-distance (last split-route)) ;(if hidden (last (butlast split-route)) (last split-route)))
@@ -153,10 +155,10 @@
 (defn city? [^String type] (.Contains type "city"))
 
 (defn get-rumored-city-info [^String line]
-    (let [[city province] (split-line line \,)
+    (let [[city province] (split-line line #",")
           [city-name city-id] (parse-word-id city)
           [province-to-name province-id] (parse-word-id province)
-          province-name (nth (split-line province-to-name \ ) 1)
+          province-name (nth (split-line province-to-name #" ") 1)
           province-type (guess-type-from-name province-name)]
     [(make-location city-name city-id "city")
      (make-location province-name province-id province-type #{ (make-route city-id "In" 1 false) })]))
@@ -167,7 +169,7 @@
 
 
 (defn get-skills [^String line]
-    (let [skill-words (split-line line \,)]
+    (let [skill-words (split-line line #",")]
     (map (fn [skill-word] (let [[_ skill-nb] (parse-word-id skill-word)] (Integer. skill-nb)))
          (filter #(and (not (string/blank? %)) (.Contains % "[")) skill-words))))
 
@@ -202,7 +204,7 @@
     character. Because in the turn reports own nobles are indicated by a * as the second character on
     any line, this is considered part of the indentation."
     (let [match (re-find #"^\s[\s|*]?\s*" line)]
-    (if match (.Length match) 0)))
+    (if match (.length match) 0)))
 
 (defn match-inner-loc
     [{ :keys [loc-in-progress locations line turn faction] :as acc}]
@@ -213,7 +215,7 @@
         (not= 3 (indent-of line))
             (assoc acc :cont match-inner-loc)
         :else
-            (let [[loc route] (get-inner-loc-info (split-line line \,))]
+            (let [[loc route] (get-inner-loc-info (split-line line #","))]
             (assoc acc :loc-in-progress (add-route route loc-in-progress)
                         :locations      (add-loc locations (assoc loc :visits #{[turn faction]}))
                         :cont            match-inner-loc)))))
@@ -241,7 +243,7 @@
 (defn match-route
     [{ :keys [loc-in-progress locations line] :as acc}]
     (let [[line _] (remove-day line)
-          parts (split-line line \,)]
+          parts (split-line line #",")]
     ;(do (println line)
     (cond
         (string/blank? line)
@@ -259,7 +261,7 @@
 
 (defn remove-html [line]
     "Removes html markup from a line of text. Contents in between tags is preserved."
-    (if (.StartsWith line "<") ;optimization - most lines have no html
+    (if (.startsWith line "<") ;optimization - most lines have no html
         (string/replace line, "<(.|\n)*?>" "")
         line))
 
@@ -276,7 +278,7 @@
           match (re-seq #"^([^\s][^\[:]+) \[([a-z][a-z]?[0-9][0-9][0-9]?)\], (.+?), in (.*)" (remove-html line))]
     (if (not (empty? match))
         (let [[_ name id type etc] (first match)
-              region (first (split-line etc \,))
+              region (first (split-line etc #","))
               loc (assoc (make-location name id type) :visits #{[turn faction]} :region region)
               hidden (.Contains etc "hidden")
               loc (if hidden (assoc loc :hidden true) loc)
@@ -306,33 +308,33 @@
         (and (nil? loc-in-progress) (nil? loc-info))
                 ; haven't found a location yet - keep looking
                 (assoc acc :cont match-loc-header)
-		(or (.StartsWith line "It is windy.")
-		    (.StartsWith line "It is raining.")
-			  (.StartsWith line "The province is blanketed in fog.")
-		    (.StartsWith line "Seen here"))
+		(or (.startsWith line "It is windy.")
+		    (.startsWith line "It is raining.")
+			  (.startsWith line "The province is blanketed in fog.")
+		    (.startsWith line "Seen here"))
 			; we are done with the current loc - need this to fix a bug
 			; e.g. vision loc, then vision ship. The ship is not recognized as a location,
 			; but parsing continues so the routes "Out" of the ship is added to the location.
 			(assoc acc  :locations (conj locations {(:id loc-in-progress) loc-in-progress})
                         :loc-in-progress nil
                         :cont      match-loc-header)
-        (.StartsWith line "Province controlled by")
+        (.startsWith line "Province controlled by")
             (let [[by in] (get-province-control-info line)]
             (assoc acc :loc-in-progress (assoc loc-in-progress :controlled-by by :controlled-by-in in)
                        :cont match-loc-header))
-        (.StartsWith line "Routes leaving")
+        (.startsWith line "Routes leaving")
             (assoc acc :cont match-route)
-        (.StartsWith line "Cities rumored to be nearby:")
+        (.startsWith line "Cities rumored to be nearby:")
             (assoc acc :cont match-rumored-city)
-        (.StartsWith line "Skills taught here:")
+        (.startsWith line "Skills taught here:")
             (assoc acc :cont match-skills-taught)
-        (.StartsWith line "Inner locations:")
+        (.startsWith line "Inner locations:")
             (assoc acc :cont match-inner-loc)
-        (.StartsWith line "Market report:")
+        (.startsWith line "Market report:")
             (assoc acc :cont match-market-report-header)
-        (and (let [l (remove-html line)] (or (.StartsWith l "Order template")
-                                             (.StartsWith l "Lore sheet")
-                                             (.StartsWith l "New players")))
+        (and (let [l (remove-html line)] (or (.startsWith l "Order template")
+                                             (.startsWith l "Lore sheet")
+                                             (.startsWith l "New players")))
              loc-in-progress)
             ;we've just parsed a location and are now done
                 (assoc acc  :locations (conj locations {(:id loc-in-progress) loc-in-progress})
@@ -536,10 +538,10 @@
 (defn merge-garrisons [{seena :seen :as garrisona} {seenb :seen :as garrisonb}]
   ; in general, two garrisons can no be merged this way. But because we know that one of the two garrisons is only going to have the inventory of one
   ; turn, the following works.
-  (if (empty? (intersection seena seenb))
+  (if (empty? (set/intersection seena seenb))
     (let [base-garrison (if (:location-id garrisona) garrisona garrisonb)] ;there is a rare case where a gar is found in the log but not in the overview. In that case, the location-id will be zero, and we want to merge from the other one.
     (assoc base-garrison :inventory (merge-with + (:inventory garrisona) (:inventory garrisonb))
-                         :seen (union seena seenb)))
+                         :seen (set/union seena seenb)))
     (if (>= (count seena) (count seenb)) garrisona garrisonb)))
 
 
@@ -624,21 +626,21 @@
     [{ :keys [line] :as acc}]
     (let [line (remove-html line)
           turn "Olympia G4 turn "
-          len-turn (.Length turn)
+          len-turn (.length turn)
           faction "Report for "
-          len-faction (.Length faction)
+          len-faction (.length faction)
           init-faction "Initial Position Report for "
-          len-init-faction (.Length init-faction)]
+          len-init-faction (.length init-faction)]
     (cond
-        (.StartsWith line turn)
-            (assoc acc :turn (Integer. (.Substring line len-turn))
+        (.startsWith line turn)
+            (assoc acc :turn (Integer. (.substring line len-turn))
                         :cont match-turn-and-faction)
-        (.StartsWith line faction)
-            (assoc acc :faction (nth (parse-word-id (.Substring line len-faction)) 1)
+        (.startsWith line faction)
+            (assoc acc :faction (nth (parse-word-id (.substring line len-faction)) 1)
                        :cont match-two
                        :subcont [match-garrisons-then-noble-header match-loc-header])
-        (.StartsWith line init-faction)
-            (assoc acc :faction (nth (parse-word-id (.Substring line len-init-faction)) 1)
+        (.startsWith line init-faction)
+            (assoc acc :faction (nth (parse-word-id (.substring line len-init-faction)) 1)
                        :cont match-two
                        :subcont [match-garrisons-then-noble-header match-loc-header])
        :else
@@ -660,16 +662,16 @@
 (defn read-report
     "Returns a report as a sequence of lines."
     [turn filename]
-    (let [file (Path/Combine base-report-folder (str turn) filename)]
+    (let [file (io/file base-report-folder (str turn) filename)]
     (do (println "reading report: " turn filename)
-        (File/ReadLines file))))
+        (line-seq (java.io.BufferedReader. file)))))
 
 (defn all-reports
     "Returns a vector of turn and filename pairs that represent all the currently downloaded reports."
     []
-    (for [turn (Directory/GetDirectories base-report-folder)
-          filename (Directory/GetFiles turn)]
-          [(Path/GetFileName turn) (Path/GetFileName filename)]))
+    (for [turn (.listFiles (io/file base-report-folder))
+          filename (.listFiles (io/file turn))]
+          [(.getName (io/file turn)) (.getName (io/file filename))]))
 
 (defn find-last-loc [turn noble]
     "Find the last location of the given noble at the given turn."
@@ -726,6 +728,7 @@
 ; (to-xml {:root {:a "a" :b "b" :routes {:to "k32" :id 22}}})
 ; (to-xml {:root {:a "a" :b "b" :routes (list "k32" "j342")}})
 ; (to-xml {:root {:a "a" :b "b" :routes (list {:to "k32" :dist 2} {:to "j342" :dist 3})}})
+(comment
 (defn to-xml
     "Parses a nested map { :elements { :a val :b val ... }} and
     writes an xml document from it using the System.Xml.Linq API.
@@ -757,13 +760,14 @@
     (let [result (into-array (to-xml element-map))]
     (.Save (XDocument. result) filename)))
 
+
 ;(def base-result-folder "C:\\Users\\Kurt\\Projects\\oly\\OlyViewer\\WpfOly\\bin\\Debug\\")
 (def base-result-folder ".")
 
 (defn make-reports-xml
     []
     (let [result (parse-reports)
-          filename (fn [name] (Path/Combine base-result-folder (str name ".xml")))
+          filename (fn [name] (io/file base-result-folder (str name ".xml")))
           save-xml (fn [keyname]
                         (to-xml-file (filename (name keyname)) { keyname (vals (result keyname))}))]
     (doall
@@ -780,11 +784,11 @@
  (defn make-tables-xml
     []
     (doall
-    [(to-xml-file "skills.xml" {:skills skills})
-    (to-xml-file "quests.xml" {:quests quests})
-    (to-xml-file "creatures.xml" {:creatures creatures})
-    (to-xml-file "innerlocs.xml" {:innerlocs innerlocs})
-    (to-xml-file "productions.xml" {:productions productions})
-    (to-xml-file "items.xml" {:items items})]
+    [(to-xml-file "skills.xml" {:skills tables/skills})
+    (to-xml-file "quests.xml" {:quests tables/quests})
+    (to-xml-file "creatures.xml" {:creatures tables/creatures})
+    (to-xml-file "innerlocs.xml" {:innerlocs tables/innerlocs})
+    (to-xml-file "productions.xml" {:productions tables/productions})
+    (to-xml-file "items.xml" {:items tables/items})]
     ))
-
+)
