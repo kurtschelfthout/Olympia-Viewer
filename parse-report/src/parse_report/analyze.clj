@@ -114,22 +114,32 @@
 (defn parse-distance [^String distance-word]
     "Parses the word to a int. The word should be of the form <int> something, or impassable. In the latter case, -1 is returned."
     ;(do (print distance-word)
-    (if (.Equals "impassable" distance-word)
+    (if (.equals "impassable" distance-word)
         -1
         (Integer. (first (split-line distance-word #" ")))))
+
+(defn ^String remover
+  "Removes any given characters from the right side of string."
+  [^CharSequence s & characters]
+  (loop [index (.length s)]
+    (if (zero? index)
+      ""
+      (if (some #(= % (.charAt s (dec index))) characters)
+        (recur (dec index))
+        (.. s (subSequence 0 index) toString)))))
 
 (defn parse-word-id [^String route-to]
     "Parse something of the form 'foo bar [id]' by extracting the bit before the brackets and the bit between the brackets and returning both of those as a tuple."
     (let [parts (split-line route-to #"\[")
           before (first parts)
-          id (.TrimEnd (last parts) (into-array [ \] \. ]))]
+          id (remover (last parts) \] \.)]
     [before id]))
 
 (def location-types #{  "forest" "plain" "desert" "mountain" "swamp" "ocean"
                         "city" "port city" "tunnel" "chamber" "hades" "cloud" "underground"})
 
 (defn guess-type-from-name [^String name]
-    (let [t (.ToLower name)]
+    (let [t (.toLowerCase name)]
     (if (location-types t) t)))
 
 (defn get-route-info [split-route]
@@ -140,19 +150,19 @@
           maybe-loc-type (nth split-route 1)
           routeIndex (if (location-types maybe-loc-type) 2 1)
           [to-name to] (parse-word-id (nth split-route routeIndex))
-          name (.Remove to-name 0 3)
+          name (.substring to-name 3 (.length to-name))
           type (if (location-types maybe-loc-type) maybe-loc-type (guess-type-from-name name))]
     [(make-route to direction distance hidden) (make-location name to type)]))
 
 (defn get-inner-loc-info [[name-id type & more :as all]]
     "returns both a location and a route - location is only used if it does not exist yet"
     (let [[name id] (parse-word-id name-id)
-          dist-word (first (filter #(or (.EndsWith % "day") (.EndsWith % "days")) more))
+          dist-word (first (filter #(or (.endsWith % "day") (.endsWith % "days")) more))
           distance (if dist-word (parse-distance dist-word) 0) ;0 if distance not given - is inner building
           hidden  (if (some #(= "hidden" %) more) true false)]
     [(make-location name id type) (make-route id "In" distance hidden)]))
 
-(defn city? [^String type] (.Contains type "city"))
+(defn city? [^String type] (.contains type "city"))
 
 (defn get-rumored-city-info [^String line]
     (let [[city province] (split-line line #",")
@@ -171,7 +181,7 @@
 (defn get-skills [^String line]
     (let [skill-words (split-line line #",")]
     (map (fn [skill-word] (let [[_ skill-nb] (parse-word-id skill-word)] (Integer. skill-nb)))
-         (filter #(and (not (string/blank? %)) (.Contains % "[")) skill-words))))
+         (filter #(and (not (string/blank? %)) (.contains % "[")) skill-words))))
 
 (defrecord Trade [buysell who price quantity weight-per-item item-name item-id])
 (defn make-trade [buysell who price quantity weight-per-item item-name item-id]
@@ -194,7 +204,7 @@
         (assoc acc :cont match-loc-header))))
 
 (defn match-market-report-header [{ :keys [line] :as acc}]
-    (if (.Contains (first (remove-day line)) "-----    ---   -----    ---     -----   ----" )
+    (if (.contains (first (remove-day line)) "-----    ---   -----    ---     -----   ----" )
         (assoc acc :cont match-trade)
         ;acc))
         (assoc acc :cont match-market-report-header)))
@@ -266,7 +276,7 @@
         line))
 
 (defn get-civ-info [etc]
-    (if (.Contains etc "wilderness")
+    (if (.contains etc "wilderness")
         0
         (let [civ (second (re-matches #".*?civ-([0-9])" etc))]
         (if civ (Integer. civ)))))
@@ -280,7 +290,7 @@
         (let [[_ name id type etc] (first match)
               region (first (split-line etc #","))
               loc (assoc (make-location name id type) :visits #{[turn faction]} :region region)
-              hidden (.Contains etc "hidden")
+              hidden (.contains etc "hidden")
               loc (if hidden (assoc loc :hidden true) loc)
               civ (get-civ-info etc)
               loc (if civ (assoc loc :civ civ) loc)]
@@ -407,14 +417,16 @@
               out (if out out (find-first has-route (vals locs)))]
         (if out (to-province out locs))))))
 
+
+
 (defn locid-to-co [loc-id]
     "given a location id on Provinia (e.g. aa11), gives back a coordinate that can be used to count with (e.g. [1 1])"
-    (let [letters (filter (complement #{\e \i \l \o \u \y }) (map char (range \a (inc \z))))
+    (let [letters (filter (complement #{\e \i \l \o \u \y }) "abcdefghijklmnopqrstuvwxyz")
           letter-to-co (fn [s] (if-let [found ((zipmap letters (range 26)) s)] found 0)) ;non-provinia locations...not handled. Return 0.
           base (count letters)
           [l1 l2] (take 2 loc-id)
           result (+ (* base (letter-to-co l1)) (letter-to-co l2))]
-    (if (nil? loc-id) [0 0] [result (int (.Remove loc-id 0 2))])))
+    (if (nil? loc-id) [0 0] [result (Integer. (.substring loc-id 2 3))])))
 
 (defn co-to-locid [[x y]]
     "Reverse of locid-to-co"
@@ -483,8 +495,8 @@
 
 (defn match-noble-info
     [{ :keys [nobles noble-in-progress turn current-loc explores gates gate-distances line] :as acc}] ;add have-arrival to args
-    (let [is-prisoner (.Contains line "is being held prisoner")
-          has-died (.EndsWith line "has died ***")
+    (let [is-prisoner (.contains line "is being held prisoner")
+          has-died (.endsWith line "has died ***")
           arrival (get-noble-arrival-info line)
           location (get-noble-location-info line)
           [clean-line _] (remove-day (remove-html line))
@@ -566,13 +578,13 @@
       ;(do (println change)
       (assoc acc :garrisons (update-inventory garrisons change)
                  :cont match-garrison-log)
-      (if (.Contains line "Paid maintenance of")
+      (if (.contains line "Paid maintenance of")
         (assoc acc :cont match-garrisons-then-noble-header)
         (assoc acc :cont match-garrison-log)))))
 
 (defn match-garrison-log-header
   [{:keys [line] :as acc}]
-  (if (.Contains line "Garrison log")
+  (if (.contains line "Garrison log")
     (assoc acc :cont match-garrison-log :skip 1)
     (assoc acc :cont match-garrison-log-header)))
 
@@ -591,7 +603,7 @@
     (let [match (get-noble-header line)]
     ;(do (print line "\n")
     (cond
-      (.Contains line "---- -----  --- ----  --- ---- ------ ------")
+      (.contains line "---- -----  --- ----  --- ---- ------ ------")
         (assoc acc :cont match-garrison)
       (not (empty? match))
           (let [[_ name id] (first match)]
@@ -738,7 +750,7 @@
     ([element-map]
     (let [as-tags? (fn [coll] (or (sequential? coll) (set? coll) (and (map? coll) (not (symbol? (first (first coll))) ))))
           xname (fn [st] (XName/Get (name st)))
-          name-elem (fn [st] (.TrimEnd (name st) (into-array [\s])))]
+          name-elem (fn [st] (remover (name st) \s))]
  ;   (do (println (str "map"))
     (if (map? element-map)
         (map
