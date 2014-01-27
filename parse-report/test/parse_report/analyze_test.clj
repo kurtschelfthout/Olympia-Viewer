@@ -4,8 +4,8 @@
   (:import [parse_report.analyze GateHits]))
 
 (deftest should-split-a-line
-  (is (= (into-array ["1" "2" "3"]) (split-line  "1,2,3" \,)))
-  (is (= (into-array ["1" "2" "3"]) (split-line  " 1 , 2,3   " \,))))
+  (is (= (list "1" "2" "3") (split-line  "1,2,3"        #",")))
+  (is (= (list "1" "2" "3") (split-line  " 1 , 2,3   "  #","))))
 
 
 (deftest should-parse-distance
@@ -198,9 +198,11 @@
     (are [exp-turn exp-faction line]
         (let [{ :keys [turn faction]} (match-turn-and-faction {:line line})]
         (and (= exp-turn turn) (= exp-faction faction)))
-        9   nil                          "Olympia G3 turn 9"
+        9   nil                          "Olympia G4 turn 9"
         nil "ca7" "Report for Demons and Minions [ca7]."
         nil "ca7" "Initial Position Report for Demons and Minions [ca7]."))
+
+(:turn (match-turn-and-faction {:line "Olympia G3 turn 9"}))
 
 (deftest should-add-new-noble
     (are [expected new-noble nobles] (= expected (add-new-noble new-noble nobles))

@@ -61,7 +61,7 @@
                  "three" 3, "four" 4, "five" 5,
                  "six" 6, "seven" 7, "eight" 8, "nine" 9, "ten" 10}
          word (words n)]
-    (if word word (int n))))
+    (if word word (Integer. n))))
 
 (defrecord Route [^String to ^String direction ^long distance hidden])
 (defn make-route [^String to ^String direction ^long distance hidden] (Route. to direction distance hidden))
@@ -426,14 +426,14 @@
           base (count letters)
           [l1 l2] (take 2 loc-id)
           result (+ (* base (letter-to-co l1)) (letter-to-co l2))]
-    (if (nil? loc-id) [0 0] [result (Integer. (.substring loc-id 2 3))])))
+    (if (nil? loc-id) [0 0] [result (Integer. (.substring loc-id 2 4))])))
 
 (defn co-to-locid [[x y]]
     "Reverse of locid-to-co"
     (let [[x y] [(mod x 100) (mod y 100)]
-          letters (filter (complement #{\e \i \l \o \u \y }) (map char (range \a (inc \z))))
+          letters (filter (complement #{\e \i \l \o \u \y }) "abcdefghijklmnopqrstuvwxyz")
           co-to-letter (zipmap (range 100) (for [i (take 6 letters) j letters] (apply str (list i j))))]
-    (apply str (list (co-to-letter x) (format "%02" y)))))
+    (apply str (list (co-to-letter x) (format "%02d" y)))))
 
 (defn provinces-at-distance [locid dist compare-fn]
     (let [[x y :as c] (locid-to-co locid)
@@ -491,7 +491,7 @@
     "Parses something like '15: Arrival at Whiteoak Marsh [bk46].' and returns the day and the location id."
     (let [match (first (re-seq #"^([\d|\s]\d): Arrival at [^\[]+ \[([^\]]{3,5})\]" (remove-html line)))]
     (if (not (empty? match))
-        (list (Integer. (nth match 1)) (nth match 2)))))
+        (list (Integer. (string/trim (nth match 1))) (nth match 2)))))
 
 (defn match-noble-info
     [{ :keys [nobles noble-in-progress turn current-loc explores gates gate-distances line] :as acc}] ;add have-arrival to args
