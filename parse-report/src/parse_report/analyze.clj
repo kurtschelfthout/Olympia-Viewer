@@ -272,7 +272,7 @@
 (defn remove-html [line]
     "Removes html markup from a line of text. Contents in between tags is preserved."
     (if (.startsWith line "<") ;optimization - most lines have no html
-        (string/replace line, "<(.|\n)*?>" "")
+        (string/replace line #"<(.|\n)*?>" "")
         line))
 
 (defn get-civ-info [etc]
